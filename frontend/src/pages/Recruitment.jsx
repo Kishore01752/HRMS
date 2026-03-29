@@ -162,29 +162,27 @@ const Recruitment = () => {
 
   // Download offer letter as PDF
   const handleDownloadOfferLetter = async (jobId, applicantId, applicantName) => {
-    try {
-      const token = localStorage.getItem('hrms_token')
-      const joiningDate = prompt('Enter joining date (e.g. 01 April 2024):') || 'To be confirmed'
-      const salary = prompt('Enter CTC/Salary (e.g. 5,00,000 per annum):') || 'As discussed'
+  try {
+    const res = await API.get(
+      `/recruitment/${jobId}/applicants/${applicantId}/offerletter`,
+      {
+        responseType: 'blob'
+      }
+    )
 
-      const res = await fetch(
-        `/api/recruitment/${jobId}/applicants/${applicantId}/offerletter?joiningDate=${encodeURIComponent(joiningDate)}&salary=${encodeURIComponent(salary)}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
+    const url = window.URL.createObjectURL(new Blob([res.data]))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `offer-letter-${applicantName}.pdf`
+    document.body.appendChild(a)
+    a.click()
 
-      if (!res.ok) throw new Error('Failed to generate offer letter')
-
-      const blob = await res.blob()
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `offer-letter-${applicantName.replace(/ /g, '-')}.pdf`
-      a.click()
-      window.URL.revokeObjectURL(url)
-    } catch (err) {
-      alert('Error generating offer letter')
-    }
+    window.URL.revokeObjectURL(url)
+  } catch (err) {
+    console.error(err)
+    alert("Error generating offer letter")
   }
+}
 
   if (loading) return <p>Loading recruitment...</p>
 
