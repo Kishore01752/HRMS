@@ -73,14 +73,15 @@ const Payroll = () => {
   // Download payslip as PDF
   const handleDownloadPayslip = async (id, empName, month, year) => {
     try {
-      const token = localStorage.getItem('hrms_token')
-      const res = await fetch(`/api/payroll/${id}/payslip`, {
-        headers: { Authorization: `Bearer ${token}` }
+      const response = await API.get(`/payroll/${id}/payslip`, {
+        responseType: 'blob'
       })
 
-      if (!res.ok) throw new Error('Failed to generate payslip')
+      if (response.status !== 200) {
+        throw new Error(`Failed to generate payslip: ${response.status}`)
+      }
 
-      const blob = await res.blob()
+      const blob = new Blob([response.data], { type: 'application/pdf' })
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
@@ -88,7 +89,8 @@ const Payroll = () => {
       a.click()
       window.URL.revokeObjectURL(url)
     } catch (err) {
-      alert('Error downloading payslip')
+      console.error('Payslip download failed', err)
+      alert('Error downloading payslip. Please check server logs for details.')
     }
   }
 
