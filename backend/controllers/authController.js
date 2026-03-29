@@ -16,7 +16,7 @@ const register = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
 
-    const exists = await User.findOne({ email });
+    const exists = await User.findOne({ email: { $regex: new RegExp(`^${email}$`, 'i') } });
     if (exists) return res.status(400).json({ message: 'Email already registered' });
 
     const hashed = await bcrypt.hash(password, 10);
@@ -37,19 +37,43 @@ const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: 'Invalid email or password' });
+    // Input validation
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
 
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) return res.status(400).json({ message: 'Invalid email or password' });
+    console.log(`Login attempt for email: ${email}`);
 
+    const user = await User.findOne({ email: { $regex: new RegExp(`^${email}$`, 'i') } });
+    if (!user) {
+      console.log(`User not found for email: ${email}`);
+      return res.status(400).json({ message: 'Invalid email or password' });
+    }
+
+    console.log(`User found, comparing password for user: ${user.email}`);
+    
+    // Add timeout for bcrypt comparison
+    const match = await Promise.race([
+      bcrypt.compare(password, user.password),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Password comparison timeout')), 5000)
+      )
+    ]);
+    
+    if (!match) {
+      console.log(`Password mismatch for user: ${user.email}`);
+      return res.status(400).json({ message: 'Invalid email or password' });
+    }
+
+    console.log(`Login successful for user: ${user.email}`);
     res.json({
       message: 'Login successful',
       token: generateToken(user),
       user: { id: user._id, name: user.name, role: user.role }
     });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    console.error('Login error:', err.message);
+    res.status(500).json({ message: 'Server error during login', error: err.message });
   }
 };
 

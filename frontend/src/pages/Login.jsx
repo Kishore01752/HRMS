@@ -18,10 +18,14 @@ const Login = () => {
     setLoading(true)
 
     try {
+      console.log('Attempting login with email:', email)
       const res = await API.post('/auth/login', { email, password })
+      console.log('Login response:', res.data)
       login(res.data.user, res.data.token)
       navigate('/dashboard')
     } catch (err) {
+      console.error('Login error:', err)
+      console.error('Error response:', err.response)
       setError(err.response?.data?.message || 'Login failed')
     } finally {
       setLoading(false)

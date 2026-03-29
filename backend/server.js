@@ -30,11 +30,26 @@ app.get('/', (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-mongoose.connect(process.env.MONGO_URI)
+// Database connection with retry logic
+const connectDB = async (retries = 5) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      await mongoose.connect(process.env.MONGO_URI);
+      console.log('MongoDB connected');
+      return;
+    } catch (err) {
+      console.log(`DB connection attempt ${i + 1} failed:`, err.message);
+      if (i === retries - 1) throw err;
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds before retry
+    }
+  }
+};
+
+connectDB()
   .then(() => {
-    console.log('MongoDB connected');
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
   })
   .catch((err) => {
-    console.log('DB connection failed:', err.message);
+    console.log('Failed to connect to database after retries:', err.message);
+    process.exit(1);
   });
