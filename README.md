@@ -60,7 +60,7 @@ A full-stack Human Resource Management System (HRMS) built using **React, Node.j
 
 ## 🛠 Tech Stack
 
-* **Frontend:** React, Bootstrap
+* **Frontend:** React
 * **Backend:** Node.js, Express
 * **Database:** MongoDB Atlas
 * **Authentication:** JSON Web Tokens (JWT)
