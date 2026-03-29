@@ -31,8 +31,19 @@ const Payroll = () => {
 
   const handleGenerate = async (e) => {
     e.preventDefault()
+    const num = (v) => {
+      const n = parseFloat(String(v ?? '').replace(/,/g, '').trim())
+      return Number.isFinite(n) ? n : 0
+    }
     try {
-      await API.post('/payroll/generate', form)
+      await API.post('/payroll/generate', {
+        employeeId: form.employeeId,
+        month: form.month,
+        year: form.year,
+        bonus: num(form.bonus),
+        allowances: num(form.allowances),
+        otherDeductions: num(form.otherDeductions)
+      })
       setShowModal(false)
       fetchPayrolls()
     } catch (err) {
@@ -44,7 +55,7 @@ const Payroll = () => {
     try {
       await API.put(`/payroll/${id}/pay`)
       fetchPayrolls()
-    } catch {
+    } catch (err) {
       alert('Could not update')
     }
   }
@@ -54,39 +65,32 @@ const Payroll = () => {
     try {
       await API.delete(`/payroll/${id}`)
       fetchPayrolls()
-    } catch {
+    } catch (err) {
       alert('Could not delete')
     }
   }
 
-  // ✅ FIXED DOWNLOAD FUNCTION (WORKING)
+  // Download payslip as PDF
   const handleDownloadPayslip = async (id, empName, month, year) => {
     try {
-      const response = await fetch(
-        `https://hrms-3-ks6x.onrender.com/api/payroll/${id}/payslip`,
-        {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('hrms_token')}`
-          }
-        }
-      )
+      const response = await API.get(`/payroll/${id}/payslip`, {
+        responseType: 'blob'
+      })
 
-      if (!response.ok) throw new Error('Download failed')
+      if (response.status !== 200) {
+        throw new Error(`Failed to generate payslip: ${response.status}`)
+      }
 
-      const blob = await response.blob()
+      const blob = new Blob([response.data], { type: 'application/pdf' })
       const url = window.URL.createObjectURL(blob)
-
       const a = document.createElement('a')
       a.href = url
       a.download = `payslip-${empName}-${month}-${year}.pdf`
-      document.body.appendChild(a)
       a.click()
-
       window.URL.revokeObjectURL(url)
     } catch (err) {
-      console.error(err)
-      alert('Error downloading payslip')
+      console.error('Payslip download failed', err)
+      alert('Error downloading payslip. Please check server logs for details.')
     }
   }
 
@@ -123,39 +127,173 @@ const Payroll = () => {
             </tr>
           </thead>
           <tbody>
-            {payrolls.map(p => (
+            {payrolls.length === 0 ? (
+              <tr>
+                <td colSpan="8" style={{ textAlign: 'center', color: '#718096' }}>
+                  No payroll records yet
+                </td>
+              </tr>
+            ) : payrolls.map(p => (
               <tr key={p._id}>
-                <td>{p.employeeId?.name}</td>
-                <td>{p.month}/{p.year}</td>
-                <td>₹{p.basicSalary}</td>
-                <td>₹{p.grossSalary}</td>
-                <td>-₹{p.tax}</td>
-                <td>₹{p.netSalary}</td>
-                <td>{p.status}</td>
                 <td>
-                  <button
-                    className="btn btn-sm"
-                    onClick={() => handleDownloadPayslip(
-                      p._id,
-                      p.employeeId?.name,
-                      p.month,
-                      p.year
+                  <div style={{ fontWeight: 500 }}>{p.employeeId?.name}</div>
+                  <div style={{ fontSize: '12px', color: '#718096' }}>{p.employeeId?.department}</div>
+                </td>
+                <td>{p.month}/{p.year}</td>
+                <td>₹{p.basicSalary?.toLocaleString()}</td>
+                <td>₹{p.grossSalary?.toLocaleString()}</td>
+                <td style={{ color: '#e53e3e' }}>
+                  -₹{(p.providentFund + p.tax + p.otherDeductions)?.toLocaleString()}
+                </td>
+                <td style={{ fontWeight: 600, color: '#38a169' }}>
+                  ₹{p.netSalary?.toLocaleString()}
+                </td>
+                <td>
+                  <span className={`badge ${p.status === 'paid' ? 'badge-green' : 'badge-yellow'}`}>
+                    {p.status}
+                  </span>
+                </td>
+                <td>
+                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    {/* Mark Paid button — only for draft */}
+                    {p.status === 'draft' && user?.role === 'admin' && (
+                      <button
+                        className="btn btn-sm btn-success"
+                        onClick={() => handleMarkPaid(p._id)}
+                      >
+                        Mark Paid
+                      </button>
                     )}
-                  >
-                    Payslip
-                  </button>
 
-                  {user?.role === 'admin' && (
-                    <button onClick={() => handleDelete(p._id)}>
-                      Delete
+                    {/* Download Payslip — available for everyone */}
+                    <button
+                      className="btn btn-sm"
+                      style={{ background: '#805ad5', color: '#fff' }}
+                      onClick={() => handleDownloadPayslip(
+                        p._id,
+                        p.employeeId?.name,
+                        p.month,
+                        p.year
+                      )}
+                    >
+                      📄 Payslip
                     </button>
-                  )}
+
+                    {/* Delete — admin only */}
+                    {user?.role === 'admin' && (
+                      <button
+                        className="btn btn-sm btn-danger"
+                        onClick={() => handleDelete(p._id)}
+                      >
+                        Delete
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {/* Generate Payroll Modal */}
+      {showModal && (
+        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h2>Generate Payroll</h2>
+            <form onSubmit={handleGenerate}>
+              <div className="form-group">
+                <label>Employee</label>
+                <select
+                  value={form.employeeId}
+                  onChange={e => setForm({ ...form, employeeId: e.target.value })}
+                  required
+                >
+                  <option value="">Select employee</option>
+                  {employees.map(e => (
+                    <option key={e._id} value={e._id}>
+                      {e.name} — {e.department}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Month (1-12)</label>
+                  <input
+                    type="number" min="1" max="12"
+                    placeholder="e.g. 3 for March"
+                    value={form.month}
+                    onChange={e => setForm({ ...form, month: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Year</label>
+                  <input
+                    type="number"
+                    value={form.year}
+                    onChange={e => setForm({ ...form, year: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Bonus (₹)</label>
+                  <input
+                    type="number"
+                    value={form.bonus}
+                    onChange={e => setForm({ ...form, bonus: e.target.value })}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Extra Allowances (₹)</label>
+                  <input
+                    type="number"
+                    value={form.allowances}
+                    onChange={e => setForm({ ...form, allowances: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label>Other Deductions (₹)</label>
+                <input
+                  type="number"
+                  value={form.otherDeductions}
+                  onChange={e => setForm({ ...form, otherDeductions: e.target.value })}
+                />
+              </div>
+
+              {/* Salary breakdown preview — illustrative */}
+              <div style={{ background: '#f7fafc', padding: '12px', borderRadius: '6px', marginBottom: '16px', fontSize: '13px', color: '#4a5568' }}>
+                <div style={{ fontWeight: 600, marginBottom: '6px' }}>💡 Salary breakdown (preview)</div>
+                <div>Employee <strong>salary</strong> field is treated as <strong>monthly CTC</strong> (₹).</div>
+                <div>Basic ≈ 50% of monthly CTC · HRA ≈ 20% · employee PF ≈ 12% of basic (monthly).</div>
+                <div>TDS uses a simplified <strong>India new-regime–style</strong> annual estimate (₹75k standard deduction, progressive slabs); monthly TDS is shown on the generated payslip.</div>
+                <div style={{ marginTop: '8px', fontSize: '12px', color: '#a0aec0' }}>Not tax or legal advice — demo numbers only.</div>
+              </div>
+
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={() => setShowModal(false)}
+                  style={{ background: '#edf2f7' }}
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  Generate Payroll
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
