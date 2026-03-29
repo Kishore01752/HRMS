@@ -23,7 +23,7 @@ A full-stack Human Resource Management System (HRMS) built using **React, Node.j
 
 ## 🎥 Demo Video
 
-👉 [Click here to watch the HRMS demo](https://drive.google.com/file/d/14aTCatCgXeKQhetjGQo3ko2hP3dl50Yr/view)
+👉 [Click here to watch the HRMS demo](https://drive.google.com/file/d/1kh7xJ-B2ohcmj3oFbvrMTR7tBMSUWjhn/view?usp=drive_link)
 
 ---
 
@@ -175,7 +175,7 @@ POST /api/auth/register
 ## 📦 Deployment
 
 * **Frontend:** Vercel
-* **Backend:** Render / Railway
+* **Backend:** Render 
 * **Database:** MongoDB Atlas
 
 ---
