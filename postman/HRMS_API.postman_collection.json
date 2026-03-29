@@ -1,0 +1,354 @@
+{
+  "info": {
+    "name": "HRMS API",
+    "description": "Human Resource Management System — REST API for local testing.\n\n1. Run **Auth → Login** (or Register) first.\n2. The Login request saves `token` to collection variables when the response contains `token`.\n3. Other folders use Bearer `{{token}}`.\n4. Replace path placeholders (`:id`, `:employeeId`, etc.) with real MongoDB ObjectIds from list responses.\n5. Multipart endpoints (create/update employee, document upload) are easiest to test from the UI or Postman **form-data** manually.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000/api" },
+    { "key": "token", "value": "" },
+    { "key": "employeeObjectId", "value": "REPLACE_WITH_EMPLOYEE_ID" },
+    { "key": "payrollObjectId", "value": "REPLACE_WITH_PAYROLL_ID" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Admin User\",\n  \"email\": \"admin@hrms.com\",\n  \"password\": \"admin123\",\n  \"role\": \"admin\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/register"
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "try {",
+                  "  var j = pm.response.json();",
+                  "  if (j.token) { pm.collectionVariables.set('token', j.token); }",
+                  "} catch (e) {}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@hrms.com\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Get stats",
+          "request": { "method": "GET", "url": "{{baseUrl}}/dashboard/stats" }
+        }
+      ]
+    },
+    {
+      "name": "Employees",
+      "item": [
+        {
+          "name": "List employees",
+          "request": { "method": "GET", "url": "{{baseUrl}}/employees" }
+        },
+        {
+          "name": "Get employee by ID",
+          "request": { "method": "GET", "url": "{{baseUrl}}/employees/{{employeeObjectId}}" }
+        },
+        {
+          "name": "Org chart data",
+          "request": { "method": "GET", "url": "{{baseUrl}}/employees/orgchart" }
+        }
+      ]
+    },
+    {
+      "name": "Attendance",
+      "item": [
+        {
+          "name": "Clock in",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"latitude\": 12.97,\n  \"longitude\": 77.59,\n  \"address\": \"Bangalore\"\n}"
+            },
+            "url": "{{baseUrl}}/attendance/clockin"
+          }
+        },
+        {
+          "name": "Clock out",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{}" },
+            "url": "{{baseUrl}}/attendance/clockout"
+          }
+        },
+        {
+          "name": "All attendance (admin)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/attendance/all" }
+        },
+        {
+          "name": "Attendance by employee",
+          "request": { "method": "GET", "url": "{{baseUrl}}/attendance/{{employeeObjectId}}" }
+        }
+      ]
+    },
+    {
+      "name": "Leaves",
+      "item": [
+        {
+          "name": "Apply leave",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeId\": \"{{employeeObjectId}}\",\n  \"leaveType\": \"casual\",\n  \"startDate\": \"2026-04-01\",\n  \"endDate\": \"2026-04-02\",\n  \"reason\": \"Personal work\",\n  \"totalDays\": 2\n}"
+            },
+            "url": "{{baseUrl}}/leaves"
+          }
+        },
+        {
+          "name": "All leaves",
+          "request": { "method": "GET", "url": "{{baseUrl}}/leaves/all" }
+        },
+        {
+          "name": "Leave balance",
+          "request": { "method": "GET", "url": "{{baseUrl}}/leaves/balance/{{employeeObjectId}}" }
+        },
+        {
+          "name": "My leaves for employee",
+          "request": { "method": "GET", "url": "{{baseUrl}}/leaves/{{employeeObjectId}}" }
+        },
+        {
+          "name": "Update leave status",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"approved\",\n  \"rejectionReason\": \"\"\n}"
+            },
+            "url": "{{baseUrl}}/leaves/LEAVE_ID/status"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Departments",
+      "item": [
+        {
+          "name": "List",
+          "request": { "method": "GET", "url": "{{baseUrl}}/departments" }
+        },
+        {
+          "name": "Create (admin)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Engineering\",\n  \"description\": \"Product\"\n}"
+            },
+            "url": "{{baseUrl}}/departments"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Designations",
+      "item": [
+        {
+          "name": "List",
+          "request": { "method": "GET", "url": "{{baseUrl}}/designations" }
+        }
+      ]
+    },
+    {
+      "name": "Payroll",
+      "item": [
+        {
+          "name": "Generate (admin)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeId\": \"{{employeeObjectId}}\",\n  \"month\": \"4\",\n  \"year\": \"2026\",\n  \"bonus\": 0,\n  \"allowances\": 0,\n  \"otherDeductions\": 0\n}"
+            },
+            "url": "{{baseUrl}}/payroll/generate"
+          }
+        },
+        {
+          "name": "All payrolls (admin)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/payroll/all" }
+        },
+        {
+          "name": "Download payslip PDF",
+          "request": { "method": "GET", "url": "{{baseUrl}}/payroll/{{payrollObjectId}}/payslip" }
+        },
+        {
+          "name": "Mark paid (admin)",
+          "request": { "method": "PUT", "url": "{{baseUrl}}/payroll/{{payrollObjectId}}/pay" }
+        },
+        {
+          "name": "Delete payroll (admin)",
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/payroll/{{payrollObjectId}}" }
+        },
+        {
+          "name": "Payrolls for employee",
+          "request": { "method": "GET", "url": "{{baseUrl}}/payroll/{{employeeObjectId}}" }
+        }
+      ]
+    },
+    {
+      "name": "Performance",
+      "item": [
+        {
+          "name": "All reviews (admin)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/performance/all" }
+        },
+        {
+          "name": "Team reviews (manager)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/performance/team/reviews" }
+        },
+        {
+          "name": "Reviews for employee",
+          "request": { "method": "GET", "url": "{{baseUrl}}/performance/{{employeeObjectId}}" }
+        },
+        {
+          "name": "Create review (admin)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeId\": \"{{employeeObjectId}}\",\n  \"reviewPeriod\": \"Q1 2026\",\n  \"reviewType\": \"quarterly\",\n  \"goals\": [\n    {\n      \"title\": \"Ship feature X\",\n      \"description\": \"End-to-end\",\n      \"target\": \"100%\",\n      \"progress\": 0,\n      \"status\": \"in-progress\"\n    }\n  ]\n}"
+            },
+            "url": "{{baseUrl}}/performance"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Recruitment",
+      "item": [
+        {
+          "name": "List jobs",
+          "request": { "method": "GET", "url": "{{baseUrl}}/recruitment" }
+        },
+        {
+          "name": "Create job (admin)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"jobTitle\": \"Full Stack Developer\",\n  \"department\": \"Engineering\",\n  \"location\": \"Remote\",\n  \"jobType\": \"full-time\",\n  \"description\": \"We are hiring\",\n  \"requirements\": \"Node, React\",\n  \"vacancies\": 1\n}"
+            },
+            "url": "{{baseUrl}}/recruitment"
+          }
+        },
+        {
+          "name": "Update applicant (admin)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"interview\",\n  \"interviewDate\": \"2026-04-15T10:00:00.000Z\",\n  \"notes\": \"Panel A\"\n}"
+            },
+            "url": "{{baseUrl}}/recruitment/JOB_ID/applicants/APPLICANT_ID"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Holidays",
+      "item": [
+        {
+          "name": "List",
+          "request": { "method": "GET", "url": "{{baseUrl}}/holidays" }
+        }
+      ]
+    },
+    {
+      "name": "Expenses",
+      "item": [
+        {
+          "name": "Submit expense",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeId\": \"{{employeeObjectId}}\",\n  \"amount\": 2500,\n  \"category\": \"travel\",\n  \"description\": \"Client visit\"\n}"
+            },
+            "url": "{{baseUrl}}/expenses"
+          }
+        },
+        {
+          "name": "All expenses (admin)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/expenses/all" }
+        }
+      ]
+    },
+    {
+      "name": "Training",
+      "item": [
+        {
+          "name": "List trainings",
+          "request": { "method": "GET", "url": "{{baseUrl}}/trainings" }
+        }
+      ]
+    },
+    {
+      "name": "Exit",
+      "item": [
+        {
+          "name": "Submit exit request",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeId\": \"{{employeeObjectId}}\",\n  \"lastWorkingDay\": \"2026-05-30\",\n  \"reason\": \"Relocation\",\n  \"noticePeriodDays\": 30\n}"
+            },
+            "url": "{{baseUrl}}/exit"
+          }
+        },
+        {
+          "name": "All exit requests (admin)",
+          "request": { "method": "GET", "url": "{{baseUrl}}/exit/all" }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+# Dependencies
+backend/node_modules/
+frontend/node_modules/
+
+# Environment & local
+backend/.env
+*.log
+
+# Build & cache
+frontend/dist/
+.vite/
+
+# Uploads (keep folder, ignore contents in dev)
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db
