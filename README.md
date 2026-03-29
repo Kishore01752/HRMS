@@ -1,17 +1,73 @@
-# HRMS - Human Resource Management System
+# 🚀 HRMS - Human Resource Management System
 
-A full stack HRMS built with React, Node.js, Express, and MongoDB.
-
-## Features
-- JWT Authentication (Admin & Employee roles)
-- Employee Management (Add, Edit, Delete + Profile Image)
-- Attendance Tracking (Clock In / Clock Out)
-- Leave Management (Apply, Approve, Reject)
-- Dashboard with live stats
+A full-stack Human Resource Management System (HRMS) built using **React, Node.js, Express, and MongoDB** to streamline employee management, attendance tracking, leave workflows, and administrative operations.
 
 ---
 
-## Project Structure
+## 🌐 Live Demo
+
+👉 https://hrms1-ivory.vercel.app/
+
+---
+
+## 🔑 Demo Login Credentials
+
+> Use these credentials to explore the application:
+
+**Admin Login**
+
+* Email: `admin@hrms.com`
+* Password: `admin123`
+
+---
+
+## 🎥 Demo Video
+
+👉 [Click here to watch the HRMS demo](https://drive.google.com/file/d/14aTCatCgXeKQhetjGQo3ko2hP3dl50Yr/view)
+
+---
+
+## ✨ Features
+
+### 🔐 Authentication
+
+* JWT-based authentication
+* Role-based access control (Admin & Employee)
+
+### 👨‍💼 Employee Management
+
+* Add, edit, and delete employees
+* Upload profile images
+* View detailed employee information
+
+### 🕒 Attendance System
+
+* Clock In / Clock Out functionality
+* Track employee attendance records
+
+### 📅 Leave Management
+
+* Apply for leave
+* Admin approval/rejection workflow
+* Leave tracking system
+
+### 📊 Dashboard
+
+* Real-time statistics
+* Employee insights and summaries
+
+---
+
+## 🛠 Tech Stack
+
+* **Frontend:** React, Bootstrap
+* **Backend:** Node.js, Express
+* **Database:** MongoDB Atlas
+* **Authentication:** JSON Web Tokens (JWT)
+
+---
+
+## 📁 Project Structure
 
 ```
 hrms-project/
@@ -20,8 +76,8 @@ hrms-project/
 │   ├── middleware/
 │   ├── models/
 │   ├── routes/
-│   ├── uploads/         ← auto-created when you add employees
-│   ├── .env             ← you create this (see below)
+│   ├── uploads/
+│   ├── .env
 │   └── server.js
 └── frontend/
     └── src/
@@ -34,30 +90,30 @@ hrms-project/
 
 ---
 
-## Setup Instructions
+## ⚙️ Setup Instructions
 
-### 1. Backend Setup
+### 1️⃣ Backend Setup
 
 ```bash
 cd backend
 npm install
 ```
 
-Create a `.env` file in the backend folder:
+Create a `.env` file:
 
 ```
 PORT=5000
-MONGO_URI=mongodb+srv://yourname:yourpassword@cluster0.xxxxx.mongodb.net/hrmsdb?retryWrites=true&w=majority
-JWT_SECRET=mysecretkey123
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_secret_key
 ```
 
-Also create an uploads folder:
+Create uploads folder:
 
 ```bash
 mkdir uploads
 ```
 
-Start the backend:
+Run backend:
 
 ```bash
 npm run dev
@@ -65,7 +121,7 @@ npm run dev
 
 ---
 
-### 2. Frontend Setup
+### 2️⃣ Frontend Setup
 
 ```bash
 cd frontend
@@ -73,19 +129,18 @@ npm install
 npm run dev
 ```
 
-Frontend runs on: http://localhost:3000  
-Backend runs on: http://localhost:5000
+* Frontend → http://localhost:3000
+* Backend → http://localhost:5000
 
 ---
 
-### 3. Create Your First Admin User
+## 👤 Create Admin User (If running locally)
 
-Use Postman or Thunder Client to call:
-
+```http
+POST /api/auth/register
 ```
-POST http://localhost:5000/api/auth/register
-Content-Type: application/json
 
+```json
 {
   "name": "Admin User",
   "email": "admin@hrms.com",
@@ -94,25 +149,65 @@ Content-Type: application/json
 }
 ```
 
-Then log in with those credentials from the browser.
+---
+
+## 📡 API Endpoints
+
+| Method | Endpoint                 | Description          |
+| ------ | ------------------------ | -------------------- |
+| POST   | /api/auth/register       | Register user        |
+| POST   | /api/auth/login          | Login                |
+| GET    | /api/employees           | Get all employees    |
+| POST   | /api/employees           | Add employee         |
+| PUT    | /api/employees/:id       | Update employee      |
+| DELETE | /api/employees/:id       | Delete employee      |
+| POST   | /api/attendance/clockin  | Clock in             |
+| POST   | /api/attendance/clockout | Clock out            |
+| GET    | /api/attendance/all      | All attendance       |
+| GET    | /api/attendance/:empId   | Employee attendance  |
+| POST   | /api/leaves              | Apply leave          |
+| GET    | /api/leaves/all          | All leaves           |
+| PUT    | /api/leaves/:id/status   | Approve/Reject leave |
+| GET    | /api/dashboard/stats     | Dashboard stats      |
 
 ---
 
-## API Endpoints
+## 📦 Deployment
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | /api/auth/register | Register user |
-| POST | /api/auth/login | Login |
-| GET | /api/employees | Get all employees |
-| POST | /api/employees | Add employee (admin) |
-| PUT | /api/employees/:id | Update employee (admin) |
-| DELETE | /api/employees/:id | Delete employee (admin) |
-| POST | /api/attendance/clockin | Clock in |
-| POST | /api/attendance/clockout | Clock out |
-| GET | /api/attendance/all | All attendance (admin) |
-| GET | /api/attendance/:empId | Employee attendance |
-| POST | /api/leaves | Apply for leave |
-| GET | /api/leaves/all | All leaves (admin) |
-| PUT | /api/leaves/:id/status | Approve/Reject leave |
-| GET | /api/dashboard/stats | Dashboard stats (admin) |
+* **Frontend:** Vercel
+* **Backend:** Render / Railway
+* **Database:** MongoDB Atlas
+
+---
+
+## 🧠 Key Highlights
+
+* Full-stack MERN architecture
+* Real-world HR workflows implementation
+* Secure authentication using JWT
+* Role-based authorization system
+* RESTful API design
+* Scalable and modular code structure
+
+---
+
+## 📬 Submission Checklist
+
+* ✅ GitHub Repository with clean code
+* ✅ Live deployed application
+* ✅ README documentation
+* ✅ Postman API collection
+* ✅ Demo video
+
+---
+
+## 👨‍💻 Author
+
+**Kishore R**
+Final Year CSE Student
+
+---
+
+## ⭐ Conclusion
+
+This project demonstrates the ability to build a complete full-stack application with real-world business logic, clean architecture, and scalable implementation.
