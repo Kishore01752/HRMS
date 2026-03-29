@@ -1,10 +1,9 @@
 import axios from 'axios'
 
 const API = axios.create({
-  baseURL: '/api'
+  baseURL: 'https://hrms-3-ks6x.onrender.com/api'
 })
 
-// Attach token to every request automatically
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem('hrms_token')
   if (token) config.headers.Authorization = `Bearer ${token}`
